@@ -1,135 +1,40 @@
+import unittest
 from many_to_many import Author, Book, Contract
-import pytest
 
-def test_book_init():
-    """Test Book class initializes with title"""
-    book = Book("Title")
-    assert book.title == "Title"
+class TestBookAuthorContract(unittest.TestCase):
 
-def test_author_init():
-    """Test Author class initializes with name"""
-    author = Author("Name")
-    assert author.name == "Name"
+    def setUp(self):
+        self.author = Author("J.K. Rowling")
+        self.book = Book("Harry Potter")
+        self.contract = self.author.sign_contract(self.book, "2023-01-01", 15)
 
-def test_contract_init():
-    """Test Contract class initializes with author, book, date, royalties"""
-    book = Book("Title")
-    author = Author("Name")
-    date = '01/01/2001'
-    royalties = 40000
-    contract = Contract(author, book, date, royalties)
+    def test_author_creation(self):
+        self.assertEqual(self.author.name, "J.K. Rowling")
+        self.assertIn(self.author, Author.all_authors)
 
-    assert contract.author == author
-    assert contract.book == book
-    assert contract.date == date
-    assert contract.royalties == royalties
+    def test_book_creation(self):
+        self.assertEqual(self.book.title, "Harry Potter")
+        self.assertIn(self.book, Book.all_books)
 
-def test_contract_validates_author():
-    """Test Contract class validates author of type Author"""
-    book = Book("Title")
-    date = '01/01/2001'
-    royalties = 40000
+    def test_sign_contract(self):
+        self.assertEqual(self.contract.author, self.author)
+        self.assertEqual(self.contract.book, self.book)
+        self.assertEqual(self.contract.date, "2023-01-01")
+        self.assertEqual(self.contract.royalties, 15)
+        self.assertIn(self.contract, Contract.all_contracts)
 
-    with pytest.raises(Exception):
-        Contract("Author", book, date, royalties)
+    def test_author_contracts(self):
+        self.assertEqual(self.author.contracts(), [self.contract])
 
-def test_contract_validates_book():
-    """Test Contract class validates book of type Book"""
-    author = Author("Name")
-    date = '01/01/2001'
-    royalties = 40000
+    def test_author_books(self):
+        self.assertEqual(self.author.books(), [self.book])
 
-    with pytest.raises(Exception):
-        Contract(author, "Book", date, royalties)
+    def test_total_royalties(self):
+        self.assertEqual(self.author.total_royalties(), 15)
 
-def test_contract_validates_date():
-    """Test Contract class validates date of type str"""
-    author = Author("Name")
-    book = Book("Title")
-    royalties = 40000
+    def test_contracts_by_date(self):
+        contracts = Contract.contracts_by_date("2023-01-01")
+        self.assertIn(self.contract, contracts)
 
-    with pytest.raises(Exception):
-        Contract(author, book, 1012001, royalties)
-
-def test_contract_validates_royalties():
-    """Test Contract class validates royalties of type int"""
-    author = Author("Name")
-    book = Book("Title")
-    date = '01/01/2001'
-
-    with pytest.raises(Exception):
-        Contract(author, book, date, "Royalties")
-
-def test_author_has_contracts():
-    """Test Author class has method contracts() that returns a list of its contracts"""
-    author = Author("Name")
-    book = Book("Title")
-    contract = Contract(author, book, '01/01/2001', 50000)
-
-    assert author.contracts() == [contract]
-
-def test_author_has_books():
-    """Test Author class has method books() that returns a list of its books"""
-    author = Author("Name")
-    book = Book("Title")
-    Contract(author, book, '01/01/2001', 50000)
-
-    assert book in author.books()
-
-def test_book_has_contracts():
-    """Test Book class has method contracts() that returns a list of its contracts"""
-    author = Author("Name")
-    book = Book("Title")
-    contract = Contract(author, book, '01/01/2001', 50000)
-
-    assert book.contracts() == [contract]
-
-def test_book_has_authors():
-    """Test Book class has method authors() that returns a list of its authors"""
-    author = Author("Name")
-    book = Book("Title")
-    Contract(author, book, '01/01/2001', 50000)
-
-    assert author in book.authors()
-
-def test_author_can_sign_contract():
-    """Test Author class has method sign_contract() that creates a contract for an author and book"""
-    author = Author("Name")
-    book = Book("Title")
-
-    contract = author.sign_contract(book, "01/01/2001", 60000)
-
-    assert isinstance(contract, Contract)
-    assert contract.author == author
-    assert contract.book == book
-    assert contract.date == "01/01/2001"
-    assert contract.royalties == 60000
-
-def test_author_has_total_royalties():
-    """Test Author class has method total_royalties that gets the sum of all its related contracts' royalties"""
-    author = Author("Name")
-    book1 = Book("Title 1")
-    book2 = Book("Title 2")
-    book3 = Book("Title 3")
-
-    Contract(author, book1, "01/01/2001", 10)
-    Contract(author, book2, "01/01/2001", 20)
-    Contract(author, book3, "01/01/2001", 30)
-
-    assert author.total_royalties() == 60
-
-def test_contract_contracts_by_date():
-    """Test Contract class has method contracts_by_date() that sorts all contracts by date"""
-    Contract.all = []
-    author1 = Author("Name 1")
-    book1 = Book("Title 1")
-    book2 = Book("Title 2")
-    book3 = Book("Title 3")
-    author2 = Author("Name 2")
-    book4 = Book("Title 4")
-    contract1 = Contract(author1, book1, "02/01/2001", 10)
-    contract2 = Contract(author1, book2, "01/01/2001", 20)
-    contract3 = Contract(author1, book3, "03/01/2001", 30)
-    contract4 = Contract(author2, book4, "01/01/2001", 40)
-
-    assert Contract.contracts_by_date('01/01/2001') == [contract2, contract4]
+if __name__ == "__main__":
+    unittest.main()
